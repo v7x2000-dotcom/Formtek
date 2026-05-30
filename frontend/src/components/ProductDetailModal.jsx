@@ -3,9 +3,18 @@ import { X, ShoppingCart, Heart, Scale, Star, Camera, Calendar, ShieldCheck, Loa
 import { productsAPI } from '../services/api';
 import useAuthStore from '../store/useAuthStore';
 
-const IMG_BASE = window.location.protocol === 'file:'
-  ? 'http://localhost:5000'
-  : window.location.origin;
+const getApiBase = () => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname.includes('github.io')) {
+      return 'https://formtek-production.up.railway.app';
+    }
+    if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    }
+  }
+  return window.location.origin;
+};
+const IMG_BASE = getApiBase();
 
 export default function ProductDetailModal({ 
   product, 
