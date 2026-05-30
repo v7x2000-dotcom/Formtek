@@ -48,17 +48,19 @@ const createCloudinaryStorage = (folder) => new CloudinaryStorage({
   cloudinary,
   params: {
     folder: `formtek/${folder}`,
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'heic', 'heif', 'jfif', 'bmp', 'tiff', 'svg'],
     transformation: [{ quality: 'auto', fetch_format: 'auto' }]
   }
 });
 
 // ─── Image Format Filter ───────────────────────────────────────────────────────
 const imageFilter = (req, file, cb) => {
-  const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
+  const allowed = ['.jpg', '.jpeg', '.jfif', '.png', '.webp', '.gif', '.avif', '.heic', '.heif', '.bmp', '.tiff', '.tif', '.svg'];
   const ext = path.extname(file.originalname).toLowerCase();
-  if (allowed.includes(ext)) return cb(null, true);
-  cb(new Error('يُسمح فقط بملفات الصور (jpg, png, webp, gif)'), false);
+  // Also allow by MIME type for files without extension
+  const allowedMime = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/heic', 'image/heif', 'image/bmp', 'image/tiff', 'image/svg+xml'];
+  if (allowed.includes(ext) || allowedMime.includes(file.mimetype)) return cb(null, true);
+  cb(new Error('يُسمح فقط بملفات الصور (jpg, png, webp, heic, gif, bmp, tiff)'), false);
 };
 
 // ─── Pick storage based on configuration ──────────────────────────────────────
