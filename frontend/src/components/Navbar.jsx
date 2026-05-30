@@ -5,8 +5,17 @@ import useAuthStore from '../store/useAuthStore';
 import useCartStore from '../store/useCartStore';
 
 // Runtime API base (same logic as api.js — works from both file:// and localhost)
-const getApiBase = () =>
-  window.location.protocol === 'file:' ? 'http://localhost:5000' : window.location.origin;
+const getApiBase = () => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname.includes('github.io')) {
+      return 'https://formtek-production.up.railway.app';
+    }
+    if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    }
+  }
+  return window.location.origin;
+};
 
 export default function Navbar({ currentPage, onNavigate, onOpenCart, onOpenAuth, onLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
