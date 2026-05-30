@@ -88,6 +88,13 @@ exports.getOrder = async (req, res, next) => {
     const Order = require('../models/Order');
     const order = await Order.findOne({ orderId: req.params.id }).populate('user', 'name email');
     if (!order) return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    
+    // Security check: Only order owner or admin can retrieve the order
+    const orderUserId = order.user?._id ? order.user._id.toString() : order.user?.toString();
+    if (req.user.role !== 'admin' && orderUserId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'غير مصرح لك بالوصول لتفاصيل هذا الطلب' });
+    }
+
     res.json({ success: true, order });
   } catch (err) { next(err); }
 };

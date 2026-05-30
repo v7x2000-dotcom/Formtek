@@ -17,11 +17,25 @@ const generateToken = (id, role) => {
 exports.register = async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'يرجى ملء جميع الحقول المطلوبة' });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'الاسم الكامل مطلوب' });
+    }
+    if (name.trim().length < 2) {
+      return res.status(400).json({ success: false, message: 'الاسم يجب أن يكون ثنائي الأحرف على الأقل' });
+    }
+    if (!email || !email.trim()) {
+      return res.status(400).json({ success: false, message: 'البريد الإلكتروني مطلوب' });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: 'البريد الإلكتروني غير صالح' });
+    }
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
+    }
 
     // ── NORMAL MODE: DB connected ─────────────────────────────────────────────
     const User = require('../models/User');
@@ -74,11 +88,18 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'يرجى إدخال البريد الإلكتروني وكلمة المرور' });
+    if (!email || !email.trim()) {
+      return res.status(400).json({ success: false, message: 'يرجى إدخال البريد الإلكتروني' });
+    }
+    if (!password) {
+      return res.status(400).json({ success: false, message: 'يرجى إدخال كلمة المرور' });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: 'البريد الإلكتروني غير صالح' });
+    }
 
     // ── NORMAL MODE: DB connected ─────────────────────────────────────────────
     const User = require('../models/User');
