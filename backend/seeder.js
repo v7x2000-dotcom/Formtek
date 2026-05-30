@@ -4,6 +4,10 @@
  * This seeds the admin user and sample products into MongoDB
  */
 require('dotenv').config();
+const dns = require('dns');
+// Force Google DNS to resolve MongoDB Atlas SRV records (ISP DNS may block SRV queries)
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
@@ -125,20 +129,25 @@ const seed = async () => {
     console.log('✅ Connected to MongoDB');
 
     // Clear existing data
-    await User.deleteMany({});
+    // await User.deleteMany({}); // DO NOT delete existing users!
     await Product.deleteMany({});
-    console.log('🗑️  Cleared existing data');
+    console.log('🗑️  Cleared existing products');
 
-    // Create admin user
-    const adminUser = await User.create({
-      name: 'Ayman Ahmed',
-      email: process.env.ADMIN_EMAIL,
-      password: process.env.ADMIN_PASSWORD,
-      phone: '01020988478',
-      role: 'admin',
-      isActive: true
-    });
-    console.log(`✅ Admin created: ${adminUser.email}`);
+    // Create admin user if not exists
+    const adminExists = await User.findOne({ email: process.env.ADMIN_EMAIL });
+    if (!adminExists) {
+      const adminUser = await User.create({
+        name: 'Ayman Ahmed',
+        email: process.env.ADMIN_EMAIL,
+        password: process.env.ADMIN_PASSWORD,
+        phone: '01020988478',
+        role: 'admin',
+        isActive: true
+      });
+      console.log(`✅ Admin created: ${adminUser.email}`);
+    } else {
+      console.log('ℹ️ Admin already exists');
+    }
 
     // Create sample products
     for (const p of products) {
