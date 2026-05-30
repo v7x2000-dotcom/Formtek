@@ -1,9 +1,9 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "cd backend && npm install"
+buildCommand = "npm install"
 
 [deploy]
-startCommand = "cd backend && node server.js"
+startCommand = "node server.js"
 healthcheckPath = "/api"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
