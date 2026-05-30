@@ -25,7 +25,8 @@ export default function ProductCard({ product, onViewDetails, favorites, onToggl
   const id = product._id || product.id;
   const isFav = favorites?.includes(id);
   const discount = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
-  const imgSrc = product.image?.startsWith('/uploads') ? `${IMG_BASE}${product.image}` : product.image;
+  const imgSrc = (product.image?.startsWith('/uploads') ? `${IMG_BASE}${product.image}` : product.image || '')
+    .replace(/^http:\/\//, 'https://');
   const isAvailable = product.isAvailable !== undefined ? product.isAvailable : (product.stock > 0);
 
   const handleAddToCart = async (e) => {

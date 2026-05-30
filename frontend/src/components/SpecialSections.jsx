@@ -85,7 +85,8 @@ function SectionHeader({ type, onNavigate, count }) {
 function MiniCard({ product, onAddToCart, onViewDetails, onToggleFavorite, isFavorite, accentColor }) {
   const isAvailable = product.isAvailable ?? (product.stock > 0);
   const isOnSale = product.isOnSale || (product.oldPrice && product.oldPrice > product.price);
-  const imgSrc = product.image?.startsWith('/uploads') ? `${IMG_BASE}${product.image}` : product.image;
+  const imgSrc = (product.image?.startsWith('/uploads') ? `${IMG_BASE}${product.image}` : product.image || '')
+    .replace(/^http:\/\//, 'https://');
 
   return (
     <motion.div

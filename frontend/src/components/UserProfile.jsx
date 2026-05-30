@@ -84,45 +84,73 @@ export default function UserProfile({
     if (!personalInfo.avatar) {
       return "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop";
     }
-    return personalInfo.avatar.startsWith('/uploads')
+    let src = personalInfo.avatar.startsWith('/uploads')
       ? `${getApiBase()}${personalInfo.avatar}`
       : personalInfo.avatar;
+    // Force HTTPS to prevent Mixed Content blocks on secure pages
+    return src.replace(/^http:\/\//, 'https://');
   };
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB limit for avatar
-    if (file.size > MAX_SIZE) {
-      toast.error("حجم الصورة كبير جداً! الحد الأقصى للصورة الشخصية هو 10 ميجابايت.");
-      return;
-    }
+    // ─── Auto-compress image using Canvas API ───────────────────────────────
+    // Works for any size image from any phone — compresses to under 1MB automatically
+    const compressImage = (inputFile) => new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(inputFile);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX_DIM = 800; // Max 800px width or height for avatar
+        let w = img.width;
+        let h = img.height;
+        if (w > MAX_DIM || h > MAX_DIM) {
+          if (w > h) { h = Math.round((h / w) * MAX_DIM); w = MAX_DIM; }
+          else       { w = Math.round((w / h) * MAX_DIM); h = MAX_DIM; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width  = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(inputFile); };
+      img.src = url;
+    });
 
-    const useBase64AvatarFallback = () => {
+    const useBase64AvatarFallback = (blob) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         setPersonalInfo(prev => ({ ...prev, avatar: event.target.result }));
         toast.success("تم تحديث الصورة الشخصية محلياً! انقر على حفظ التغييرات لحفظها. 📸");
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(blob);
     };
 
     try {
       setUploadingAvatar(true);
+      toast.info("جاري ضغط الصورة ورفعها... ⏳");
+
+      const compressed = await compressImage(file);
+      const compressedFile = new File([compressed], 'avatar.jpg', { type: 'image/jpeg' });
+
       const formData = new FormData();
-      formData.append('avatar', file);
+      formData.append('avatar', compressedFile);
 
       const { data } = await uploadAPI.avatar(formData);
       if (data.success && data.url) {
-        setPersonalInfo(prev => ({ ...prev, avatar: data.url }));
+        setPersonalInfo(prev => ({ ...prev, avatar: data.url.replace(/^http:\/\//, 'https://') }));
         toast.success("تم رفع الصورة الشخصية بنجاح! انقر على حفظ التغييرات لحفظها. 📸");
       } else {
-        useBase64AvatarFallback();
+        useBase64AvatarFallback(compressed);
       }
     } catch (err) {
       console.warn("Server avatar upload failed, falling back to Base64:", err);
-      useBase64AvatarFallback();
+      try {
+        const compressed = await compressImage(file);
+        useBase64AvatarFallback(compressed);
+      } catch { useBase64AvatarFallback(file); }
     } finally {
       setUploadingAvatar(false);
     }

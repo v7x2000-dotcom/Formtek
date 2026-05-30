@@ -27,7 +27,8 @@ export default function ProductDetailModal({
 }) {
   const { user } = useAuthStore();
   const isAvailable = product.isAvailable !== undefined ? product.isAvailable : (product.stock > 0);
-  const imgSrc = product.image?.startsWith('/uploads') ? `${IMG_BASE}${product.image}` : product.image;
+  const imgSrc = (product.image?.startsWith('/uploads') ? `${IMG_BASE}${product.image}` : product.image || '')
+    .replace(/^http:\/\//, 'https://');
 
   // Only show approved reviews from DB — no mock data
   const [reviews, setReviews] = useState(

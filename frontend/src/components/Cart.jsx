@@ -80,7 +80,8 @@ export default function Cart({ isOpen, onClose, onCheckout, onBrowseProducts }) 
                 <AnimatePresence initial={false}>
                   {items.map(item => {
                     const id = item._id || item.id;
-                    const imgSrc = item.image?.startsWith('/uploads') ? `${IMG_BASE}${item.image}` : item.image;
+                    const imgSrc = (item.image?.startsWith('/uploads') ? `${IMG_BASE}${item.image}` : item.image || '')
+                      .replace(/^http:\/\//, 'https://');
                     return (
                       <motion.div key={id}
                         initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30, height: 0 }}
