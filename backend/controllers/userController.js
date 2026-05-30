@@ -28,6 +28,33 @@ exports.toggleStatus = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// @desc    Delete user permanently (Admin)
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const User = require('../models/User');
+    const Order = require('../models/Order');
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+    if (user.role === 'admin') return res.status(403).json({ success: false, message: 'لا يمكن حذف حساب المسؤول' });
+    if (user._id.toString() === req.user.id) return res.status(403).json({ success: false, message: 'لا يمكنك حذف حسابك الخاص' });
+
+    // Delete user's orders too
+    await Order.deleteMany({ user: user._id });
+
+    const deletedName = user.name;
+    const deletedEmail = user.email;
+    await User.findByIdAndDelete(req.params.id);
+
+    global.io?.emit('user_change', { type: 'delete', userId: req.params.id });
+    await logActivity('حذف حساب مستخدم', `تم حذف حساب "${deletedName}" (${deletedEmail}) نهائياً من قِبل الأدمن`, 'danger', req.user, req.ip);
+
+    res.json({ success: true, message: `تم حذف حساب "${deletedName}" بنجاح 🗑️` });
+  } catch (err) { next(err); }
+};
+
 // @desc    Update own profile
 // @route   PUT /api/users/profile
 // @access  Private
