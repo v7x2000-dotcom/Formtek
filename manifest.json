@@ -1,0 +1,21 @@
+{
+  "name": "فورمتك | Formtek - متجر المكملات الرياضية",
+  "short_name": "Formtek",
+  "description": "متجر رياضي عالمي متخصص في المكملات الغذائية والأدوات الرياضية",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050507",
+  "theme_color": "#00ff66",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "health", "fitness"]
+}
