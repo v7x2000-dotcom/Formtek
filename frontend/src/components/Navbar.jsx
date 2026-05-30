@@ -170,10 +170,24 @@ export default function Navbar({ currentPage, onNavigate, onOpenCart, onOpenAuth
               >
                 <ChevronDown className={`w-3 h-3 text-textSecondary transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                 <span className="text-[11px] font-bold text-white hidden sm:block max-w-[80px] truncate">{user.name}</span>
-                {user.avatar ? (
-                  <img src={user.avatar.startsWith('/uploads') ? `${getApiBase()}${user.avatar}` : user.avatar}
-                    alt="" className="w-6 h-6 rounded-lg object-cover" />
-                ) : (
+                {user.avatar ? (() => {
+                  const avatarSrc = (user.avatar.startsWith('/uploads')
+                    ? `${getApiBase()}${user.avatar}`
+                    : user.avatar).replace(/^http:\/\//, 'https://');
+                  return (
+                    <img
+                      src={avatarSrc}
+                      alt=""
+                      className="w-6 h-6 rounded-lg object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentNode.insertAdjacentHTML('beforeend',
+                          `<div class="w-6 h-6 rounded-lg bg-neonGreen/20 border border-neonGreen/30 flex items-center justify-center text-[10px] font-black text-neonGreen">${(user.name||'U').charAt(0).toUpperCase()}</div>`
+                        );
+                      }}
+                    />
+                  );
+                })() : (
                   <div className="w-6 h-6 rounded-lg bg-neonGreen/20 border border-neonGreen/30 flex items-center justify-center">
                     <User className="w-3.5 h-3.5 text-neonGreen" />
                   </div>

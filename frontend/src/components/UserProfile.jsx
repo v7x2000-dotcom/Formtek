@@ -299,9 +299,23 @@ export default function UserProfile({
                 <div className="relative w-24 h-24 rounded-full border-2 border-neonGreen overflow-hidden flex items-center justify-center bg-primary">
                   {uploadingAvatar ? (
                     <span className="w-6 h-6 border-2 border-neonGreen/30 border-t-neonGreen rounded-full animate-spin" />
-                  ) : (
-                    <img src={getAvatarSrc()} alt="User Avatar" className="w-full h-full object-cover" />
-                  )}
+                  ) : getAvatarSrc().startsWith('data:') || getAvatarSrc().startsWith('https://') ? (
+                    <img
+                      src={getAvatarSrc()}
+                      alt={personalInfo.name || 'Avatar'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <span
+                    className="w-full h-full flex items-center justify-center text-2xl font-black text-neonGreen"
+                    style={{ display: (getAvatarSrc().startsWith('data:') || getAvatarSrc().startsWith('https://')) ? 'none' : 'flex' }}
+                  >
+                    {(personalInfo.name || 'U').charAt(0).toUpperCase()}
+                  </span>
                   <label className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
                     <Camera className="w-6 h-6 text-white" />
                     <input type="file" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} className="hidden" />
