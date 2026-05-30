@@ -84,7 +84,7 @@ exports.uploadProductImages = multer({
 exports.uploadAvatar = multer({
   storage: getStorage('avatars'),
   fileFilter: imageFilter,
-  limits: { fileSize: 2 * 1024 * 1024 } // 2MB
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 }).single('avatar');
 
 exports.uploadPaymentProof = multer({
