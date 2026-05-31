@@ -12,10 +12,13 @@ const OrderSchema = new mongoose.Schema({
   },
   // Shipping info
   shippingInfo: {
-    name:    { type: String, required: true },
-    phone:   { type: String, required: true },
-    address: { type: String, required: true },
-    city:    { type: String, default: '' }
+    name:        { type: String, required: true },
+    email:       { type: String, default: '' },
+    phone:       { type: String, required: true },
+    address:     { type: String, required: true },
+    governorate: { type: String, default: '' },
+    city:        { type: String, default: '' },
+    postalCode:  { type: String, default: '' }
   },
   // Cart items snapshot
   cartItems: [{

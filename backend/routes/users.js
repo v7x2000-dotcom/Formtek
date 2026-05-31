@@ -3,11 +3,13 @@ const { getUsers, toggleStatus, deleteUser, updateProfile, addAddress, deleteAdd
 const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/', protect, adminOnly, getUsers);
-router.put('/:id/toggle-status', protect, adminOnly, toggleStatus);
-router.delete('/:id', protect, adminOnly, deleteUser);
 router.put('/profile', protect, updateProfile);
 router.post('/address', protect, addAddress);
 router.delete('/address/:addressId', protect, deleteAddress);
 router.post('/wishlist/:productId', protect, toggleWishlist);
+
+// General ID parameter routes (must go at the bottom)
+router.put('/:id/toggle-status', protect, adminOnly, toggleStatus);
+router.delete('/:id', protect, adminOnly, deleteUser);
 
 module.exports = router;

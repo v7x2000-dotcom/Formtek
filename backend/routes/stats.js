@@ -24,7 +24,7 @@ router.get('/public', async (req, res) => {
 
     const avgRating = ratingAgg.length > 0
       ? Math.round(ratingAgg[0].avgRating * 10) / 10
-      : 4.9;
+      : 0;
 
     res.json({
       success: true,
@@ -37,7 +37,7 @@ router.get('/public', async (req, res) => {
   } catch (err) {
     res.json({
       success: true,
-      stats: { totalProducts: 8, deliveredOrders: 0, avgRating: 4.9 }
+      stats: { totalProducts: 0, deliveredOrders: 0, avgRating: 0 }
     });
   }
 });

@@ -86,7 +86,12 @@ exports.getMyOrders = async (req, res, next) => {
 exports.getOrder = async (req, res, next) => {
   try {
     const Order = require('../models/Order');
-    const order = await Order.findOne({ orderId: req.params.id }).populate('user', 'name email');
+    const mongoose = require('mongoose');
+    let query = { orderId: req.params.id };
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      query = { $or: [{ _id: req.params.id }, { orderId: req.params.id }] };
+    }
+    const order = await Order.findOne(query).populate('user', 'name email');
     if (!order) return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
     
     // Security check: Only order owner or admin can retrieve the order
@@ -111,7 +116,12 @@ exports.updateStatus = async (req, res, next) => {
     }
 
     const Order = require('../models/Order');
-    const order = await Order.findOne({ orderId: req.params.id });
+    const mongoose = require('mongoose');
+    let query = { orderId: req.params.id };
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      query = { $or: [{ _id: req.params.id }, { orderId: req.params.id }] };
+    }
+    const order = await Order.findOne(query);
     if (!order) return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
     const oldStatus = order.status;
     order.status = status;
@@ -120,6 +130,36 @@ exports.updateStatus = async (req, res, next) => {
     global.io?.emit('order_change', { type: 'status_update', orderId: order.orderId, status, order });
     await logActivity('تحديث حالة الطلب', `تم تحديث حالة الطلب رقم ${order.orderId} من "${oldStatus}" إلى "${status}"`, 'info', req.user, req.ip);
     res.json({ success: true, message: 'تم تحديث حالة الطلب بنجاح ✅', order });
+  } catch (err) { next(err); }
+};
+
+// @desc    Delete order permanently (Admin)
+// @route   DELETE /api/orders/:id
+// @access  Private/Admin
+exports.deleteOrder = async (req, res, next) => {
+  try {
+    const Order    = require('../models/Order');
+    const mongoose = require('mongoose');
+
+    let query = { orderId: req.params.id };
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      query = { $or: [{ _id: req.params.id }, { orderId: req.params.id }] };
+    }
+    const order = await Order.findOne(query);
+    if (!order) return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+
+    // Delete payment proof file if it's a local upload
+    if (order.paymentProof && order.paymentProof.startsWith('/uploads')) {
+      const filePath = path.join(__dirname, '..', order.paymentProof);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+
+    const orderId = order.orderId;
+    await Order.findByIdAndDelete(order._id);
+
+    global.io?.emit('order_change', { type: 'delete', orderId });
+    await logActivity('حذف طلب', `تم حذف الطلب رقم ${orderId} بواسطة الأدمن`, 'warning', req.user, req.ip);
+    res.json({ success: true, message: `تم حذف الطلب ${orderId} بنجاح 🗑️` });
   } catch (err) { next(err); }
 };
 

@@ -6,7 +6,7 @@ const logActivity = require('../utils/logger');
 exports.getUsers = async (req, res, next) => {
   try {
     const User = require('../models/User');
-    const users = await User.find({ role: 'customer' }).sort({ createdAt: -1 }).select('-password');
+    const users = await User.find({}).sort({ createdAt: -1 }).select('-password');
     res.json({ success: true, users });
   } catch (err) { next(err); }
 };

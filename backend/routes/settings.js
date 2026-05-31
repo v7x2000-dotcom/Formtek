@@ -92,4 +92,60 @@ router.put('/', protect, adminOnly, async (req, res, next) => {
   }
 });
 
+// @desc    Clean all mock/test data from DB (Admin only)
+// @route   POST /api/settings/clean-mock-data
+// @access  Private/Admin
+router.post('/clean-mock-data', protect, adminOnly, async (req, res, next) => {
+  try {
+    const User = require('../models/User');
+    const Product = require('../models/Product');
+    const Order = require('../models/Order');
+    const ActivityLog = require('../models/ActivityLog');
+    const Message = require('../models/Message');
+
+    // 1. Delete all users except admin users
+    const usersResult = await User.deleteMany({ role: { $ne: 'admin' } });
+
+    // 2. Delete all orders
+    const ordersResult = await Order.deleteMany({});
+
+    // 3. Delete all products (clean catalog slate)
+    const productsResult = await Product.deleteMany({});
+
+    // 4. Delete all messages
+    const messagesResult = await Message.deleteMany({});
+
+    // 5. Delete all activity logs except we will log this reset action
+    await ActivityLog.deleteMany({});
+
+    // Log this DB clean action
+    await logActivity(
+      'تنظيف قاعدة البيانات',
+      `تم تنظيف كافة البيانات التجريبية بنجاح. تم حذف: ${usersResult.deletedCount} مستخدم، ${ordersResult.deletedCount} طلب، ${productsResult.deletedCount} منتج.`,
+      'danger',
+      req.user,
+      req.ip
+    );
+
+    // Emit WebSocket changes so connected interfaces reflect changes immediately
+    global.io?.emit('user_change', { type: 'reset' });
+    global.io?.emit('product_change', { type: 'reset' });
+    global.io?.emit('order_change', { type: 'reset' });
+    global.io?.emit('log_change', { type: 'reset' });
+
+    res.json({
+      success: true,
+      message: 'تم تنظيف كافة البيانات التجريبية والوهمية من المتجر بنجاح! 🧹✨',
+      deleted: {
+        users: usersResult.deletedCount,
+        orders: ordersResult.deletedCount,
+        products: productsResult.deletedCount,
+        messages: messagesResult.deletedCount
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
